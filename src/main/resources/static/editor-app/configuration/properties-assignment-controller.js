@@ -82,6 +82,18 @@ var KisBpmAssignmentPopupCtrl = ['$scope','$http', function ($scope,$http) {
         $scope.close();
     };
 
+    $scope.search = function(){
+        $scope.pagingOptions.currentPage = 1;
+        $scope.getPagedDataAsync($scope.pagingOptions.currentPage, $scope.pagingOptions.pageSize, $scope.keyword);
+    };
+    $scope.clear = function(){
+        $scope.keyword = "";
+        $scope.pagingOptions.currentPage = 1;
+        $scope.getPagedDataAsync($scope.pagingOptions.currentPage, $scope.pagingOptions.pageSize, $scope.keyword);
+    };
+
+
+
     // Close button handler
     $scope.close = function () {
         handleAssignmentInput($scope);
@@ -144,6 +156,7 @@ var KisBpmAssignmentPopupCtrl = ['$scope','$http', function ($scope,$http) {
     $scope.columnDataName = 'columnData';
     $scope.selectType = 0;//0-委托人，1-候选人，2-候选组
     $scope.totalServerItems = 0;//表格总条数
+    $scope.keyword='';//关键字搜索
     //分页初始化
     $scope.pagingOptions = {
         pageSizes: [10, 20, 30],//page 行数可选值
@@ -154,15 +167,17 @@ var KisBpmAssignmentPopupCtrl = ['$scope','$http', function ($scope,$http) {
     $scope.projects = [];
     $scope.selectedProject = -1;
 
+
     //异步请求项目列表数据
     $scope.getProjectDataAsync = function () {
         $http({
             method: 'POST',
-            url: ACTIVITI.CONFIG.contextRoot + '/model/getProjectList'
+            url: '/model/getActivitiEmployee?pageNo=1&pageSize=10'
         }).then(function successCallback(response) {
-            $scope.projects = response.data;
+            debugger;
+            $scope.projects = response.data.data;
             if ($scope.projects.length > 0) {
-                $scope.selectedProject = $scope.projects[0].pkid;
+                $scope.selectedProject = $scope.projects[0].empNo;
             }
             $scope.dataWatch();
         }, function errorCallback(response) {
@@ -175,41 +190,51 @@ var KisBpmAssignmentPopupCtrl = ['$scope','$http', function ($scope,$http) {
     $scope.dataWatch = function () {
         //分页数据监视
         $scope.$watch('pagingOptions', function (newValue, oldValue) {
-            $scope.getPagedDataAsync($scope.pagingOptions.currentPage, $scope.pagingOptions.pageSize, $scope.selectedProject);
+            if ($scope.selectType == 0 || $scope.selectType == 1) {
+                $scope.getPagedDataAsync($scope.pagingOptions.currentPage, $scope.pagingOptions.pageSize, $scope.keyword);
+            }else {
+                $scope.getPagedDataAsync($scope.pagingOptions.currentPage, $scope.pagingOptions.pageSize, $scope.keyword);
+            }
         }, true);
 
         //当切换类型时，初始化当前页
         $scope.$watch('selectType', function (newValue, oldValue) {
             if (newValue != oldValue) {
                 $scope.pagingOptions.currentPage = 1;
-                $scope.getPagedDataAsync($scope.pagingOptions.currentPage, $scope.pagingOptions.pageSize, $scope.selectedProject);
+                $scope.getPagedDataAsync($scope.pagingOptions.currentPage, $scope.pagingOptions.pageSize);
             }
         }, true);
 
         //切换平台
         $scope.change = function (x) {
             $scope.selectedProject = x;
-            $scope.getPagedDataAsync($scope.pagingOptions.currentPage, $scope.pagingOptions.pageSize, $scope.selectedProject);
+            $scope.getPagedDataAsync($scope.pagingOptions.currentPage, $scope.pagingOptions.pageSize);
+        };
+
+        $scope.changeKeyword = function (val) {
+            $scope.keyword = val;
         };
     };
 
+    $scope.dataWatch();
+
     //异步请求表格数据
-    $scope.getPagedDataAsync = function (pageNum, pageSize, projectId) {
+    $scope.getPagedDataAsync = function (pageNum, pageSize, keyword) {
         var url;
         if ($scope.selectType == 2) {
-            url = '/model/getGroupList';
+            url = '/model/getActivitiPositionGroup';
             $scope.columnData = $scope.groupColumns;
         } else {
-            url = '/model/getUserList';
+            url = '/model/getActivitiEmployee';
             $scope.columnData = $scope.userColumns;
         }
         $http({
             method: 'POST',
-            url: ACTIVITI.CONFIG.contextRoot + url,
+            url: url,
             params: {
-                'pageNum': pageNum,
+                'pageNo': pageNum,
                 'pageSize': pageSize,
-                'projectId': projectId
+                'keyword':keyword
             }
         }).then(function successCallback(response) {
             $scope.gridData = response.data.data;
@@ -232,8 +257,7 @@ var KisBpmAssignmentPopupCtrl = ['$scope','$http', function ($scope,$http) {
         showSelectionCheckbox: false,
         columnDefs: $scope.columnDataName,
         beforeSelectionChange: function (event) {
-            var data = event.entity.pkid;
-
+            var data = event.entity.empNo;
             if ($scope.selectType == 0) {//选委托人
                 event.entity.checked = !event.selected;
                 $scope.assignment.assignee = data;
@@ -243,7 +267,7 @@ var KisBpmAssignmentPopupCtrl = ['$scope','$http', function ($scope,$http) {
                     $scope.assignment.candidateUsers.push(obj);
                 }
             } else if ($scope.selectType == 2) {//候选组
-                var obj = {value: $scope.getGroupData(event.entity)};
+                var obj = {value: event.entity.positionNo};
                 if (!array_contain($scope.assignment.candidateGroups, obj.value)) {
                     $scope.assignment.candidateGroups.push(obj);
                 }
@@ -252,96 +276,50 @@ var KisBpmAssignmentPopupCtrl = ['$scope','$http', function ($scope,$http) {
         }
     };
 
-    $scope.getGroupData = function (data) {
-        var prefix = ['${projectId}_', '${bankEnterpriseId}_', '${coreEnterpriseId}_', '${chainEnterpriseId}_'];
-        var result = prefix[data.enterpriseType] + data.roleCode;
-        return result;
-    };
-
     //选择用户时表头
     $scope.userColumns = [
         {
-            field: 'pkid',
-            type: 'number',
-            displayName: '用户Id',
+            field: 'empNo',
+            displayName: '员工编号',
             minWidth: 100,
             width: '18%'
         },
         {
-            field: 'nickName',
-            displayName: '昵称',
+            field: 'empName',
+            displayName: '员工姓名',
             minWidth: 100,
             width: '25%'
         },
         {
-            field: 'loginName',
-            displayName: '登录名',
+            field: 'jobName',
+            displayName: '职务名称',
             minWidth: 100,
             width: '25%'
         },
         {
-            field: 'realName',
-            displayName: '姓名',
-            minWidth: 100,
-            width: '25%'
+            field: 'deptName',
+            displayName: '部门名称'
+            // cellClass:'txt-center'
         }
     ];
-    $scope.displayText = function (enterpriseType) {
-        var tmp = '';
-        switch (enterpriseType) {
-            case 0:
-                tmp = '运营';
-                break;
-            case 1:
-                tmp = '银行';
-                break;
-            case 2:
-                tmp = '核心';
-                break;
-            case 3:
-                tmp = '链属';
-                break;
-            default:
-                tmp = 'N/A';
-                break;
-        }
-        return tmp;
-    };
+
     //选择用户组时表头
     $scope.groupColumns = [
         {
-            field: 'pkid',
-            type: 'number',
-            displayName: '角色Id',
+            field: 'positionNo',
+            displayName: '职务编号',
             minWidth: 100,
-            width: '16%'
+            width: '20%'
         },
         {
-            field: 'roleCode',
-            displayName: '角色code',
+            field: 'positionName',
+            displayName: '职务名称',
             minWidth: 100,
-            width: '16%'
+            width: '40%'
         },
         {
-            field: 'name',
-            displayName: '角色名称',
-            minWidth: 100,
-            width: '25%'
-        },
-        {
-            field: 'type',
-            type: 'number',
-            displayName: '角色类型',
-            minWidth: 100,
-            width: '18%',
-            cellTemplate: '<span>{{row.entity.type==1?"公有":"私有"}}</span>'
-        },
-        {
-            field: 'enterpriseType',
-            displayName: '业务类型',
-            minWidth: 100,
-            width: '18%'
-            , cellTemplate: '<span>{{displayText(row.entity.enterpriseType);}}</span>'
+            field: 'positionType',
+            displayName: '职务类型'
         }
     ];
 

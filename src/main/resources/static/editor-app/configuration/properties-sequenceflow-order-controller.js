@@ -18,7 +18,7 @@
  */
 
 /*
- * Sequence flow order controller
+ * Sequence flow order web
  */
 
 var KisBpmSequenceFlowOrderCtrl = [ '$scope', '$modal', '$timeout', '$translate', function($scope, $modal, $timeout, $translate) {

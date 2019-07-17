@@ -1,0 +1,27 @@
+server:
+  port: 8080
+spring:
+  application:
+    name: activiti-modeler
+    #数据源配置
+  datasource:
+    type: com.alibaba.druid.pool.DruidDataSource
+    url: jdbc:mysql://localhost:3306/atcrowdfunding180906?serverTimezone=UTC&rewriteBatchedStatements=true&useUnicode=true&characterEncoding=utf8
+    username: root
+    password: root
+  #freemarker模板配置
+  freemarker:
+    suffix: .ftl
+    cache: false
+    charset: UTF-8
+    contentType: text/html
+    requestContextAttribute: ctx
+    templateEncoding: UTF-8
+    templateLoaderPath: classpath:/templates/
+    settings:
+      defaultEncoding: UTF-8
+      url_escaping_charset: UTF-8
+      locale: zh_CN
+  activiti:
+    check-process-definitions: false
+

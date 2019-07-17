@@ -71,7 +71,7 @@ var $sanitizeMinErr = angular.$$minErr('$sanitize');
          };
        }
      </script>
-     <div ng-controller="Ctrl">
+     <div ng-web="Ctrl">
         Snippet: <textarea ng-model="snippet" cols="60" rows="3"></textarea>
        <table>
          <tr>
@@ -506,7 +506,7 @@ angular.module('ngSanitize', []).provider('$sanitize', $SanitizeProvider);
            $scope.snippetWithTarget = 'http://angularjs.org/';
          }
        </script>
-       <div ng-controller="Ctrl">
+       <div ng-web="Ctrl">
        Snippet: <textarea ng-model="snippet" cols="60" rows="3"></textarea>
        <table>
          <tr>

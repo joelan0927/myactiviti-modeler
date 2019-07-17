@@ -1,4 +1,4 @@
-package com.activiti.controller;
+package com.activiti.web;
 
 import java.io.IOException;
 import java.util.HashMap;

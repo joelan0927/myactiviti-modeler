@@ -33,7 +33,7 @@ angular.module('activitiModeler').controller('ActivitiMessageDefinitionsCtrl', [
     $modal(opts);
 }]);
 
-//Need a separate controller for the modal window due to https://github.com/angular-ui/bootstrap/issues/259
+//Need a separate web for the modal window due to https://github.com/angular-ui/bootstrap/issues/259
 // Will be fixed in a newer version of Angular UI
 angular.module('activitiModeler').controller('ActivitiMessageDefinitionsPopupCtrl',
     ['$scope', '$q', '$translate', '$timeout', function ($scope, $q, $translate, $timeout) {

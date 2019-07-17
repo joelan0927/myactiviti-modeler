@@ -291,7 +291,7 @@ KISBPM.TOOLBAR = {
     }
 };
 
-/** Custom controller for the save dialog */
+/** Custom web for the save dialog */
 var SaveModelCtrl = [ '$rootScope', '$scope', '$http', '$route', '$location',
     function ($rootScope, $scope, $http, $route, $location) {
 
